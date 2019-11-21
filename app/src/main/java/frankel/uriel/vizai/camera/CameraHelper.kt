@@ -19,6 +19,7 @@ import java.util.*
 
 const val PERMISSION_REQUEST_CODE = 101
 const val REQUEST_TAKE_PHOTO = 102
+const val PICK_IMAGE = 103
 class CameraHelper(val activity: Activity, val photoPathListener: PhotoPathListener) {
 
     private lateinit var imageFileName: String
@@ -127,8 +128,8 @@ class CameraHelper(val activity: Activity, val photoPathListener: PhotoPathListe
                     currentPhotoPath
                 ), image
             )
-            currentPhotoPath = Uri.fromFile(image).toString()
-            photoPathListener.onPhotoReadey(currentPhotoPath!!)
+            currentPhotoPath = Uri.fromFile(image).path
+            photoPathListener.onPhotoReady(currentPhotoPath!!)
 
         }
     }
