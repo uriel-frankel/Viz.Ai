@@ -19,7 +19,7 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven { url "https://jitpack.io" }  //Make sure to add this in your project for uCrop
+        maven { url "https://www.jitpack.io" }  //Make sure to add this in your project for uCrop
 
     }
 }

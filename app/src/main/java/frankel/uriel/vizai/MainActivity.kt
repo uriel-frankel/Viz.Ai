@@ -14,7 +14,7 @@ import frankel.uriel.vizai.utils.Resource
 import frankel.uriel.vizai.viewmodel.FacesViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
-const val PROFILE_IMAGE_REQ_CODE = 101
+const val IMAGE_REQ_CODE = 101
 
 class MainActivity : FragmentActivity() {
 
@@ -28,7 +28,7 @@ class MainActivity : FragmentActivity() {
         capture.setOnClickListener {
             ImagePicker.with(this)
                 .compress(400)
-                .start(PROFILE_IMAGE_REQ_CODE)
+                .start(IMAGE_REQ_CODE)
         }
 
 
@@ -69,7 +69,7 @@ class MainActivity : FragmentActivity() {
             val file = ImagePicker.getFile(data)
             file?.apply {
                 when (requestCode) {
-                    PROFILE_IMAGE_REQ_CODE -> {
+                    IMAGE_REQ_CODE -> {
                         Picasso.get().load(this).into(image)
                         viewModel.sendImageToServer(this)
                     }
