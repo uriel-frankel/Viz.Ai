@@ -13,13 +13,26 @@
         android:layout_height="0dp"
         android:layout_weight="0.6" />
 
-    <TextView
-        android:textSize="32dp"
-        android:id="@+id/emotion"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.2"
-        android:gravity="center" />
+        android:layout_weight="0.2">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/emotion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textSize="32sp" />
+    </FrameLayout>
 
     <FrameLayout
         android:layout_width="match_parent"

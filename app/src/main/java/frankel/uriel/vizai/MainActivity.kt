@@ -1,29 +1,27 @@
 package frankel.uriel.vizai
 
-import Face
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.squareup.picasso.Picasso
-import frankel.uriel.vizai.model.network.ApiService
+import frankel.uriel.vizai.utils.Resource
+import frankel.uriel.vizai.viewmodel.FacesViewModel
 import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
-import java.io.FileInputStream
 
 const val PROFILE_IMAGE_REQ_CODE = 101
 
 class MainActivity : AppCompatActivity() {
 
 
+    private lateinit var viewModel: FacesViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,49 +34,34 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+        viewModel = ViewModelProviders.of(this).get(FacesViewModel::class.java)
+
+        viewModel.emotion.observe(this, Observer {
+            when(it){
+                is Resource.Loading -> {
+                    emotion.text = null
+                    progressBar.visibility = View.VISIBLE
+                }
+                is Resource.Success -> {
+                    progressBar.visibility = View.GONE
+                    emotion.text = getString(it.data)
+                }
+                is Resource.Failure -> {
+                    progressBar.visibility = View.GONE
+                    emotion.text = getString(R.string.error)
+
+                }
+            }
+
+        })
+
     }
 
     private fun uploadFile(file: File) {
         Picasso.get().load(file).into(image)
+        viewModel.sendImageToServer(file)
 
-        val inputStream = FileInputStream(file)
-        val buf = ByteArray(inputStream.available())
-        while (inputStream.read(buf) !== -1);
-        val requestBodyByte = RequestBody
-            .create("application/octet-stream".toMediaType(), buf)
-        val content_disposition =
-            "attachment; filename=\"" + file.path + "\""
-        ApiService.instance.service.detectFaces(content_disposition, requestBodyByte)
-            ?.enqueue(object : Callback<Array<Face>?> {
-                override fun onFailure(call: Call<Array<Face>?>, t: Throwable) {
-                    showError()
-                    t.printStackTrace()
-                }
-
-                override fun onResponse(
-                    call: Call<Array<Face>?>,
-                    response: Response<Array<Face>?>
-                ) {
-                    if (response.isSuccessful) {
-                       runOnUiThread {
-                           emotion.text = getString(response.body()?.get(0)?.faceAttributes?.emotion?.getEmotion() ?: R.string.error)
-                       }
-
-                    }
-                }
-
-
-            })
     }
-
-    private fun showError() {
-        Toast.makeText(
-            this@MainActivity,
-            "Error",
-            Toast.LENGTH_LONG
-        ).show()
-    }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -89,7 +72,6 @@ class MainActivity : AppCompatActivity() {
                 Log.e("TAG", "Path:${absolutePath}")
                 when (requestCode) {
                     PROFILE_IMAGE_REQ_CODE -> {
-                        Picasso.get().load(path).into(image)
                         uploadFile(this)
                     }
                 }
