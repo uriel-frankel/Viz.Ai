@@ -13,7 +13,6 @@ import com.squareup.picasso.Picasso
 import frankel.uriel.vizai.utils.Resource
 import frankel.uriel.vizai.viewmodel.FacesViewModel
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
 
 const val PROFILE_IMAGE_REQ_CODE = 101
 
@@ -64,12 +63,6 @@ class MainActivity : FragmentActivity() {
 
     }
 
-    private fun uploadFile(file: File) {
-        Picasso.get().load(file).into(image)
-        viewModel.sendImageToServer(file)
-
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
@@ -77,7 +70,8 @@ class MainActivity : FragmentActivity() {
             file?.apply {
                 when (requestCode) {
                     PROFILE_IMAGE_REQ_CODE -> {
-                        uploadFile(this)
+                        Picasso.get().load(this).into(image)
+                        viewModel.sendImageToServer(this)
                     }
                 }
 
@@ -87,7 +81,5 @@ class MainActivity : FragmentActivity() {
             Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_SHORT).show()
         }
     }
-
-
 
 }
