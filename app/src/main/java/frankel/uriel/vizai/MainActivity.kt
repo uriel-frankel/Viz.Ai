@@ -1,19 +1,14 @@
 package frankel.uriel.vizai
 
 import Face
+import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.github.dhaval2404.imagepicker.ImagePicker
 import com.squareup.picasso.Picasso
-import frankel.uriel.vizai.camera.CameraHelper
-import frankel.uriel.vizai.camera.PICK_IMAGE
-import frankel.uriel.vizai.camera.PhotoPathListener
-import frankel.uriel.vizai.camera.REQUEST_TAKE_PHOTO
 import frankel.uriel.vizai.model.network.ApiService
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -21,34 +16,23 @@ import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
 
-
+const val PROFILE_IMAGE_REQ_CODE = 101
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var cameraHelper: CameraHelper
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        cameraHelper = CameraHelper(this, object : PhotoPathListener {
-            override fun onPhotoReady(path: String) {
-                val file = File(path)
-                uploadFile(file)
-            }
-        })
 
         capture.setOnClickListener {
-            cameraHelper.takePicture()
-        }
-
-        open.setOnClickListener {
-            val intent = Intent()
-            intent.type = "image/*"
-            intent.action = Intent.ACTION_GET_CONTENT
-            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE)
+            ImagePicker.with(this)
+                .compress(400)			//Final image size will be less than 1 MB(Optional)
+                .start(PROFILE_IMAGE_REQ_CODE)
         }
 
 
@@ -67,7 +51,8 @@ class MainActivity : AppCompatActivity() {
         ApiService.instance.service.detectFaces(content_disposition, requestBodyByte)
             ?.enqueue(object : Callback<Array<Face>?> {
                 override fun onFailure(call: Call<Array<Face>?>, t: Throwable) {
-
+                    showError()
+                    t.printStackTrace()
                 }
 
                 override fun onResponse(
@@ -75,11 +60,10 @@ class MainActivity : AppCompatActivity() {
                     response: Response<Array<Face>?>
                 ) {
                     if (response.isSuccessful) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "happy " + response.body()?.get(0)?.faceAttributes?.emotion,
-                            Toast.LENGTH_LONG
-                        ).show()
+                       runOnUiThread {
+                           emotion.text = getString(response.body()?.get(0)?.faceAttributes?.emotion?.getEmotion() ?: R.string.error)
+                       }
+
                     }
                 }
 
@@ -87,62 +71,38 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
+    private fun showError() {
+        Toast.makeText(
+            this@MainActivity,
+            "Error",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_TAKE_PHOTO) {
-            cameraHelper.onActivityResult(requestCode, resultCode, data)
-        } else {
-            val image = downSizeImage(data?.data)
+        if (resultCode == Activity.RESULT_OK) {
+            // File object will not be null for RESULT_OK
+            val file = ImagePicker.getFile(data)
+            file?.apply {
+                Log.e("TAG", "Path:${absolutePath}")
+                when (requestCode) {
+                    PROFILE_IMAGE_REQ_CODE -> {
+                        Picasso.get().load(path).into(image)
+                        uploadFile(this)
+                    }
+                }
 
-            uploadFile(image)
+            }
+
+        } else if (resultCode == ImagePicker.RESULT_ERROR) {
+            Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Task Cancelled", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun downSizeImage(imageUri: Uri?): File {
-        val scaleDivider = 4
 
-
-        // 1. Convert uri to bitmap
-
-        val fullBitmap =
-            MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
-
-        // 2. Get the downsized image content as a byte[]
-        val scaleWidth = fullBitmap.width / scaleDivider
-        val scaleHeight = fullBitmap.height / scaleDivider
-        val downsizedImageBytes =
-            getDownsizedImageBytes(fullBitmap, scaleWidth, scaleHeight)
-
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        val image = File.createTempFile(
-            "urururur", /* prefix */
-            ".jpg", /* suffix */
-            storageDir      /* directory */
-        )
-        val bos = BufferedOutputStream(FileOutputStream(image))
-        bos.write(downsizedImageBytes)
-        bos.flush()
-        bos.close()
-        return image
-    }
-
-    fun getDownsizedImageBytes(
-        fullBitmap: Bitmap?, scaleWidth: Int, scaleHeight: Int
-    ): ByteArray? {
-        val scaledBitmap =
-            Bitmap.createScaledBitmap(fullBitmap!!, scaleWidth, scaleHeight, true)
-        val baos = ByteArrayOutputStream()
-        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-        return baos.toByteArray()
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        cameraHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
 
 }

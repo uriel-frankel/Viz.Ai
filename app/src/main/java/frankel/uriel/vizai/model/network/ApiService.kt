@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 
 class ApiService {
-    lateinit var service: AzureService
+    var service: AzureService
 
     companion object {
         val instance = ApiService()
