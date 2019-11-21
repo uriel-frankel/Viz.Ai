@@ -41,17 +41,25 @@ class MainActivity : AppCompatActivity() {
                 is Resource.Loading -> {
                     emotion.text = null
                     progressBar.visibility = View.VISIBLE
+                    capture.isEnabled = false
                 }
                 is Resource.Success -> {
                     progressBar.visibility = View.GONE
                     emotion.text = getString(it.data)
+                    capture.isEnabled = true
                 }
                 is Resource.Failure -> {
                     progressBar.visibility = View.GONE
                     emotion.text = getString(R.string.error)
+                    capture.isEnabled = true
 
                 }
             }
+
+        })
+
+        viewModel.croppedBitmap.observe(this, Observer {
+            image.setImageBitmap(it)
 
         })
 
