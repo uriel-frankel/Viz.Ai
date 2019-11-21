@@ -41,7 +41,7 @@ class FacesViewModel : ViewModel() {
                     call: Call<Array<Face>?>,
                     response: Response<Array<Face>?>
                 ) {
-                    if (response.isSuccessful) {
+                    if (response.isSuccessful && response.body()?.size ?: 0 > 0) {
                         val face = response.body()?.get(0)
                         val data = face?.faceAttributes?.emotion?.getEmotion()
                         data?.apply {
@@ -58,10 +58,20 @@ class FacesViewModel : ViewModel() {
 
                         face?.faceRectangle?.apply {
 
-                            croppedBitmap.postValue( Bitmap.createBitmap(bitmap, left, top, width, height))
+                            croppedBitmap.postValue(
+                                Bitmap.createBitmap(
+                                    bitmap,
+                                    left,
+                                    top,
+                                    width,
+                                    height
+                                )
+                            )
 
                         }
 
+                    } else {
+                        emotion.postValue(Resource.Failure())
                     }
                 }
 

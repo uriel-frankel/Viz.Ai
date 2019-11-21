@@ -3,10 +3,9 @@ package frankel.uriel.vizai
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.github.dhaval2404.imagepicker.ImagePicker
@@ -18,7 +17,7 @@ import java.io.File
 
 const val PROFILE_IMAGE_REQ_CODE = 101
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
 
 
     private lateinit var viewModel: FacesViewModel
@@ -29,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         capture.setOnClickListener {
             ImagePicker.with(this)
-                .compress(400)			//Final image size will be less than 1 MB(Optional)
+                .compress(400)
                 .start(PROFILE_IMAGE_REQ_CODE)
         }
 
@@ -74,10 +73,8 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
-            // File object will not be null for RESULT_OK
             val file = ImagePicker.getFile(data)
             file?.apply {
-                Log.e("TAG", "Path:${absolutePath}")
                 when (requestCode) {
                     PROFILE_IMAGE_REQ_CODE -> {
                         uploadFile(this)
@@ -88,8 +85,6 @@ class MainActivity : AppCompatActivity() {
 
         } else if (resultCode == ImagePicker.RESULT_ERROR) {
             Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Task Cancelled", Toast.LENGTH_SHORT).show()
         }
     }
 
