@@ -29,7 +29,7 @@ class FacesViewModel : ViewModel() {
         emotion.postValue(Resource.Loading())
 
         val requestBody = file.asRequestBody("application/octet-stream".toMediaType())
-        val contentDisposition = "attachment; filename=\"" + file.path + "\""
+        val contentDisposition = "attachment; filename=\"" + file.name + "\""
         ApiService.instance.service.detectFaces(contentDisposition, requestBody)
             ?.enqueue(object : Callback<Array<Face>?> {
                 override fun onFailure(call: Call<Array<Face>?>, t: Throwable) {
